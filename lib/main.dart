@@ -200,7 +200,20 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<Job> get trendingJobs {
-    return allJobs.take(4).toList();
+    // Apply the same filters to trending jobs
+    return allJobs.where((job) {
+      bool matchesType =
+          selectedJobType == 'All' || job.type == selectedJobType;
+      bool matchesSearch =
+          searchQuery.isEmpty ||
+          job.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          job.company.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          job.location.toLowerCase().contains(searchQuery.toLowerCase());
+      bool matchesLocation =
+          selectedLocations.isEmpty || selectedLocations.contains(job.location);
+
+      return matchesType && matchesSearch && matchesLocation;
+    }).take(4).toList();
   }
 
   @override
@@ -445,13 +458,15 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 16),
                     SizedBox(
                       height: 190,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: trendingJobs.length,
-                        itemBuilder: (context, index) {
-                          return TrendingJobCard(job: trendingJobs[index]);
-                        },
-                      ),
+                      child: trendingJobs.isEmpty
+                          ? _buildEmptyTrendingState()
+                          : ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: trendingJobs.length,
+                              itemBuilder: (context, index) {
+                                return TrendingJobCard(job: trendingJobs[index]);
+                              },
+                            ),
                     ),
                   ],
 
@@ -626,6 +641,37 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Try adjusting your filters or search terms',
               style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyTrendingState() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.trending_up_rounded,
+              size: 40,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No trending jobs match your filters',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
